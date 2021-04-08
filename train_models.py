@@ -25,25 +25,12 @@ def train(data, file_name, params, num_epochs=50, batch_size=128, train_temp=1, 
     model = Sequential()
 
     print(data.train_data.shape)
-    
-    model.add(Conv2D(params[0], (3, 3),
-                            input_shape=data.train_data.shape[1:]))
-    model.add(Activation('relu'))
-    model.add(Conv2D(params[1], (3, 3)))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
 
-    model.add(Conv2D(params[2], (3, 3)))
-    model.add(Activation('relu'))
-    model.add(Conv2D(params[3], (3, 3)))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-
-    model.add(Flatten())
-    model.add(Dense(params[4]))
+    model.add(Flatten(input_shape=(28, 28, 1)))
+    model.add(Dense(params[0]))
     model.add(Activation('relu'))
     model.add(Dropout(0.5))
-    model.add(Dense(params[5]))
+    model.add(Dense(params[1]))
     model.add(Activation('relu'))
     model.add(Dense(10))
     
@@ -108,7 +95,7 @@ if not os.path.isdir('models'):
     os.makedirs('models')
 
 #train(CIFAR(), "models/cifar", [64, 64, 128, 128, 256, 256], num_epochs=50)
-train(MNIST(), "models/mnist", [32, 32, 64, 64, 200, 200], num_epochs=1)
+train(MNIST(), "models/mnist", [256, 256], num_epochs=1)
 
 #train_distillation(MNIST(), "models/mnist-distilled-100", [32, 32, 64, 64, 200, 200],
 #                   num_epochs=50, train_temp=100)

@@ -69,8 +69,6 @@ def generate_data(data, samples, targeted=True, start=0, inception=False):
 def arguments():
     # benchmark
     parser = argparse.ArgumentParser(description="Script to run carlini wagner attack.")
-    parser.add_argument('-e', '--epsilon', type=float, default=0,
-                        help='The epsilon for L_infinity perturbation')
     parser.add_argument('-t', '--target-label', type=int, default=0,
                         help='The target of the adversarial attack')
     parser.add_argument('-i,', '--index', type=int, default=0,
@@ -83,13 +81,13 @@ if __name__ == "__main__":
 
     with tf.Session() as sess:
         data, model =  MNIST(), MNISTModel("models/mnist", sess)
-        #data, model =  CIFAR(), CIFARModel("models/cifar", sess)
         attack = CarliniLi(sess, model, max_iterations=1000, initial_const=1)
 
         inputs, targets = generate_data(data, samples=1, targeted=True,
-                                        start=0, inception=False)
-        inputs = inputs[0:1]
-        targets = targets[0:1]
+                                        start=args.index, inception=False)
+        for i in range(10):
+            targets[0][i] = 0
+        targets[0][args.target_label] = 1
         print(inputs)
         print(targets)
         timestart = time.time()
