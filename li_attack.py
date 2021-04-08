@@ -8,6 +8,8 @@
 import sys
 import tensorflow as tf
 import numpy as np
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 DECREASE_FACTOR = 0.9   # 0<f<1, rate at which we shrink tau; larger is more accurate
 MAX_ITERATIONS = 1000   # number of iterations to perform gradient descent

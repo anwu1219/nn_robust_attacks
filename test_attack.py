@@ -5,9 +5,12 @@
 ## This program is licenced under the BSD 2-Clause licence,
 ## contained in the LICENCE file in this directory.
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import numpy as np
 import time
+import sys
+import argparse
 
 from setup_cifar import CIFAR, CIFARModel
 from setup_mnist import MNIST, MNISTModel
@@ -23,7 +26,7 @@ def show(img):
     Show MNSIT digits in the console.
     """
     remap = "  .*#"+"#"*100
-    img = (img.flatten()+.5)*3
+    img = (img.flatten()+0.5)*3
     if len(img) != 784: return
     print("START")
     for i in range(28):
@@ -63,17 +66,32 @@ def generate_data(data, samples, targeted=True, start=0, inception=False):
 
     return inputs, targets
 
+def arguments():
+    # benchmark
+    parser = argparse.ArgumentParser(description="Script to run carlini wagner attack.")
+    parser.add_argument('-e', '--epsilon', type=float, default=0,
+                        help='The epsilon for L_infinity perturbation')
+    parser.add_argument('-t', '--target-label', type=int, default=0,
+                        help='The target of the adversarial attack')
+    parser.add_argument('-i,', '--index', type=int, default=0,
+                        help='The index of the point in the test set')
+    return parser
+
 
 if __name__ == "__main__":
+    args = arguments().parse_args()
+
     with tf.Session() as sess:
         data, model =  MNIST(), MNISTModel("models/mnist", sess)
         #data, model =  CIFAR(), CIFARModel("models/cifar", sess)
-        attack = CarliniL2(sess, model, batch_size=9, max_iterations=1000, confidence=0)
-        #attack = CarliniL0(sess, model, max_iterations=1000, initial_const=10,
-        #                   largest_const=15)
+        attack = CarliniLi(sess, model, max_iterations=1000, initial_const=1)
 
         inputs, targets = generate_data(data, samples=1, targeted=True,
                                         start=0, inception=False)
+        inputs = inputs[0:1]
+        targets = targets[0:1]
+        print(inputs)
+        print(targets)
         timestart = time.time()
         adv = attack.attack(inputs, targets)
         timeend = time.time()
@@ -85,7 +103,7 @@ if __name__ == "__main__":
             show(inputs[i])
             print("Adversarial:")
             show(adv[i])
-            
+            print(adv[i])
             print("Classification:", model.model.predict(adv[i:i+1]))
 
-            print("Total distortion:", np.sum((adv[i]-inputs[i])**2)**.5)
+            print("Perturbation:", np.max(adv[i]-inputs[i]))

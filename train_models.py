@@ -12,7 +12,8 @@ from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras.optimizers import SGD
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 from setup_mnist import MNIST
 from setup_cifar import CIFAR
 import os
@@ -106,10 +107,10 @@ def train_distillation(data, file_name, params, num_epochs=50, batch_size=128, t
 if not os.path.isdir('models'):
     os.makedirs('models')
 
-train(CIFAR(), "models/cifar", [64, 64, 128, 128, 256, 256], num_epochs=50)
-train(MNIST(), "models/mnist", [32, 32, 64, 64, 200, 200], num_epochs=50)
+#train(CIFAR(), "models/cifar", [64, 64, 128, 128, 256, 256], num_epochs=50)
+train(MNIST(), "models/mnist", [32, 32, 64, 64, 200, 200], num_epochs=1)
 
-train_distillation(MNIST(), "models/mnist-distilled-100", [32, 32, 64, 64, 200, 200],
-                   num_epochs=50, train_temp=100)
-train_distillation(CIFAR(), "models/cifar-distilled-100", [64, 64, 128, 128, 256, 256],
-                   num_epochs=50, train_temp=100)
+#train_distillation(MNIST(), "models/mnist-distilled-100", [32, 32, 64, 64, 200, 200],
+#                   num_epochs=50, train_temp=100)
+#train_distillation(CIFAR(), "models/cifar-distilled-100", [64, 64, 128, 128, 256, 256],
+#                   num_epochs=50, train_temp=100)
