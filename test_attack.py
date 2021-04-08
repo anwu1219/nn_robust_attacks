@@ -69,10 +69,15 @@ def generate_data(data, samples, targeted=True, start=0, inception=False):
 def arguments():
     # benchmark
     parser = argparse.ArgumentParser(description="Script to run carlini wagner attack.")
+    parser.add_argument('-n', '--model', type=str, default="mnist",
+                        help='model')
     parser.add_argument('-t', '--target-label', type=int, default=0,
                         help='The target of the adversarial attack')
     parser.add_argument('-i,', '--index', type=int, default=0,
                         help='The index of the point in the test set')
+    parser.add_argument('-s,', '--summary', type=str, default="./",
+                        help='The summary folder')
+
     return parser
 
 
@@ -80,7 +85,7 @@ if __name__ == "__main__":
     args = arguments().parse_args()
 
     with tf.Session() as sess:
-        data, model =  MNIST(), MNISTModel("models/mnist", sess)
+        data, model =  MNIST(), MNISTModel(f"models/{args.model}", sess)
         attack = CarliniLi(sess, model, max_iterations=1000, initial_const=1)
 
         inputs, targets = generate_data(data, samples=1, targeted=True,
@@ -88,6 +93,8 @@ if __name__ == "__main__":
         for i in range(10):
             targets[0][i] = 0
         targets[0][args.target_label] = 1
+        inputs = inputs[0:1]
+        targets = targets[0:1]
         print(inputs)
         print(targets)
         timestart = time.time()
@@ -100,8 +107,9 @@ if __name__ == "__main__":
             print("Valid:")
             show(inputs[i])
             print("Adversarial:")
-            show(adv[i])
+            #show(adv[i])
             print(adv[i])
             print("Classification:", model.model.predict(adv[i:i+1]))
-
             print("Perturbation:", np.max(adv[i]-inputs[i]))
+    with open(args.summary + f"/{args.model}_tar{args.target_label}_ind{args.index}.txt", 'w') as out_file:
+        out_file.write("{} {}\n".format(timeend-timestart, np.max(adv[i]-inputs[i])))
