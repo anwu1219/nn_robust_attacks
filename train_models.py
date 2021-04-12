@@ -18,7 +18,7 @@ from setup_mnist import MNIST
 from setup_cifar import CIFAR
 import os
 
-def train(data, file_name, params, num_epochs=50, batch_size=128, train_temp=1, init=None):
+def train(data, file_name, num_layers, num_neurons, num_epochs=50, batch_size=128, train_temp=1, init=None):
     """
     Standard neural network training procedure.
     """
@@ -27,11 +27,10 @@ def train(data, file_name, params, num_epochs=50, batch_size=128, train_temp=1, 
     print(data.train_data.shape)
 
     model.add(Flatten(input_shape=(28, 28, 1)))
-    model.add(Dense(params[0]))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(params[1]))
-    model.add(Activation('relu'))
+    for i in range(num_layers):
+        model.add(Dropout(0.1))
+        model.add(Dense(num_neurons))
+        model.add(Activation('relu'))
     model.add(Dense(10))
     
     if init != None:
@@ -94,8 +93,10 @@ def train_distillation(data, file_name, params, num_epochs=50, batch_size=128, t
 if not os.path.isdir('models'):
     os.makedirs('models')
 
+import sys
+num_layers = int(sys.argv[1])
 #train(CIFAR(), "models/cifar", [64, 64, 128, 128, 256, 256], num_epochs=50)
-train(MNIST(), "models/mnist", [256, 256], num_epochs=1)
+train(MNIST(), "models/mnist{}x256_cw".format(num_layers), num_layers, 256, num_epochs=50)
 
 #train_distillation(MNIST(), "models/mnist-distilled-100", [32, 32, 64, 64, 200, 200],
 #                   num_epochs=50, train_temp=100)

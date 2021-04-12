@@ -70,45 +70,78 @@ class MNISTModel:
         self.image_size = 28
         self.num_labels = 10
 
-        model_onnx = onnx.load(restore)
-        weights = model_onnx.graph.initializer
-        isBias = numpy_helper.to_array(weights[0]).shape == (neurons,)
-        allWeights = []
-        allBiases = []
-        for weight in weights:
-            if isBias:
-                allBiases.append(numpy_helper.to_array(weight))
-                isBias = False
-            else:
-                allWeights.append(numpy_helper.to_array(weight).T)
-                isBias = True
+        #model_onnx = onnx.load(restore)
+        #weights = model_onnx.graph.initializer
+        #isBias = numpy_helper.to_array(weights[0]).shape == (neurons,)
+        #allWeights = []
+        #allBiases = []
+        #for weight in weights:
+        #    if isBias:
+        #        allBiases.append(numpy_helper.to_array(weight))
+        #        isBias = False
+        #    else:
+        #        allWeights.append(numpy_helper.to_array(weight).T)
+        #        isBias = True
 
-        allLayers = []
-        for i in range(len(allBiases)):
-            if i == 0:
-                allLayers.append((np.eye(784), np.ones(784) - 0.5))
-            allLayers.append((allWeights[i], allBiases[i]))
+        #allLayers = []
+        #for i in range(len(allBiases)):
+        #    if i == 0:
+        #        allLayers.append((np.eye(784), np.ones(784) - 0.5))
+        #    allLayers.append((allWeights[i], allBiases[i]))
 
         model = Sequential()
         model.add(Flatten(input_shape=(28, 28, 1)))
-        model.add(Dense(784, use_bias=True))
         for i in range(layers):
             model.add(Dense(neurons, use_bias=True))
             model.add(Activation('relu'))
         model.add(Dense(10))
 
-        index = 0
-        weights = model.get_weights()
-        for j, layer in enumerate(model.layers):
-            if type(layer) == Dense:
-                layer.set_weights(allLayers[index])
-                index += 1
+
+        #index = 0
+        #weights = model.get_weights()
+        #for j, layer in enumerate(model.layers):
+        #    if type(layer) == Dense:
+        #        layer.set_weights(allLayers[index])
+        #        index += 1
+        model.load_weights(restore)
 
         self.model = model
+
+        '''
         #m = MNIST()
         #print(model.predict(m.test_data[0].reshape(1,28,28,1)))
+        weights = []
+        biases = []
+        for layer in model.layers:
+            if len(layer.get_weights()) > 0:
+                weights.append(layer.get_weights()[0])
+                biases.append(layer.get_weights()[1])
 
-
+        with open("temp.nnet", 'w') as out_file:
+            out_file.write("{},784,10,784,\n".format(layers+1))
+            out_file.write("784,{},10,\n".format(",".join(layers * ["256"])))
+            out_file.write('0\n')
+            for i in range(784):
+                out_file.write("-0.5,")
+            out_file.write("\n")
+            for i in range(784):
+                out_file.write("0.5,")
+            out_file.write("\n")
+            for i in range(785):
+                out_file.write("0.0,")
+            out_file.write("\n")
+            for i in range(785):
+                out_file.write("1.0,")
+            out_file.write("\n")
+            for i in range(len(biases)):
+                weight = list(weights[i].T)
+                for line in weight:
+                    out_file.write(",".join(list(map(str, line))))
+                    out_file.write(",\n")
+                for ele in list(biases[i].flatten()):
+                    out_file.write("{},".format(ele))
+                    out_file.write('\n')
+        '''
 
     def predict(self, data):
         return self.model(data)
