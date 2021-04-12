@@ -101,13 +101,12 @@ class MNISTModel:
         weights = model.get_weights()
         for j, layer in enumerate(model.layers):
             if type(layer) == Dense:
-                print(j)
                 layer.set_weights(allLayers[index])
                 index += 1
 
         self.model = model
-        m = MNIST()
-        print(model.predict(m.test_data[0].reshape(1,28,28,1)))
+        #m = MNIST()
+        #print(model.predict(m.test_data[0].reshape(1,28,28,1)))
 
 
 

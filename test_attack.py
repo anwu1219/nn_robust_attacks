@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
     with tf.Session() as sess:
         data, model =  MNIST(), MNISTModel(f"models/{args.model}", args.layers, args.neurons, sess)
-        attack = CarliniLi(sess, model, max_iterations=2000, initial_const=1, largest_const=129)
+        attack = CarliniLi(sess, model)
 
         inputs, targets = generate_data(data, samples=1, targeted=True,
                                         start=args.index, inception=False)
