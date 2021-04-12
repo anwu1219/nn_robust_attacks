@@ -13,11 +13,15 @@ import pickle
 import gzip
 import urllib.request
 
+import keras
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras.utils import np_utils
 from keras.models import load_model
+
+import onnx
+from onnx import numpy_helper
 
 def extract_data(filename, num_images):
     with gzip.open(filename) as bytestream:
@@ -61,22 +65,51 @@ class MNIST:
 
 
 class MNISTModel:
-    def __init__(self, restore, session=None):
+    def __init__(self, restore, layers, neurons, session=None):
         self.num_channels = 1
         self.image_size = 28
         self.num_labels = 10
 
-        model = Sequential()
+        model_onnx = onnx.load(restore)
+        weights = model_onnx.graph.initializer
+        isBias = numpy_helper.to_array(weights[0]).shape == (neurons,)
+        allWeights = []
+        allBiases = []
+        for weight in weights:
+            if isBias:
+                allBiases.append(numpy_helper.to_array(weight))
+                isBias = False
+            else:
+                allWeights.append(numpy_helper.to_array(weight).T)
+                isBias = True
 
+        allLayers = []
+        for i in range(len(allBiases)):
+            if i == 0:
+                allLayers.append((np.eye(784), np.ones(784) - 0.5))
+            allLayers.append((allWeights[i], allBiases[i]))
+
+        model = Sequential()
         model.add(Flatten(input_shape=(28, 28, 1)))
-        model.add(Dense(256))
-        model.add(Activation('relu'))
-        model.add(Dense(256))
-        model.add(Activation('relu'))
+        model.add(Dense(784, use_bias=True))
+        for i in range(layers):
+            model.add(Dense(neurons, use_bias=True))
+            model.add(Activation('relu'))
         model.add(Dense(10))
-        model.load_weights(restore)
+
+        index = 0
+        weights = model.get_weights()
+        for j, layer in enumerate(model.layers):
+            if type(layer) == Dense:
+                print(j)
+                layer.set_weights(allLayers[index])
+                index += 1
 
         self.model = model
+        m = MNIST()
+        print(model.predict(m.test_data[0].reshape(1,28,28,1)))
+
+
 
     def predict(self, data):
         return self.model(data)
