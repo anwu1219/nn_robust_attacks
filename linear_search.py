@@ -11,12 +11,13 @@ upperEps = float(open(cw_summary_file).read().split()[1])
 
 eps_high = upperEps
 
-while eps_high > 0:
+while eps_high > 0.00001:
     eps_high -= 0.02 * upperEps
     currentEps = eps_high
     summary_file = summary_folder + "/{}.summary".format(currentEps)
     command = "{} {} --epsilon {} --summary-file {}".format(runScript, " ".join(args), currentEps, summary_file).split()
-    subprocess.run(command)
+    if not os.path.isfile(summary_file):
+        subprocess.run(command)
     assert(os.path.isfile(summary_file))
     result = open(summary_file, 'r').readlines()[0].split()[0]
     if (result == 'sat'):
