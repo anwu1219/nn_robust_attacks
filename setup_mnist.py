@@ -70,6 +70,9 @@ class MNISTModel:
         self.image_size = 28
         self.num_labels = 10
 
+
+        self.input = Flatten(input_shape=(28, 28, 1))
+        self.output = Dense(10)
         #model_onnx = onnx.load(restore)
         #weights = model_onnx.graph.initializer
         #isBias = numpy_helper.to_array(weights[0]).shape == (neurons,)
@@ -90,11 +93,11 @@ class MNISTModel:
         #    allLayers.append((allWeights[i], allBiases[i]))
 
         model = Sequential()
-        model.add(Flatten(input_shape=(28, 28, 1)))
+        model.add(self.input)
         for i in range(layers):
             model.add(Dense(neurons, use_bias=True))
             model.add(Activation('relu'))
-        model.add(Dense(10))
+        model.add(self.output)
 
 
         #index = 0
